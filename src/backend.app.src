@@ -1,0 +1,12 @@
+{application, backend,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { backend_app, []}},
+  {env, []}
+ ]}.

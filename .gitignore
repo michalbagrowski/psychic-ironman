@@ -1,7 +1,11 @@
-ebin
-.eunit
-deps
+/ebin
+/.eunit
+/deps
 *.o
 *.beam
 *.plt
 erl_crash.dump
+.DS_Store
+/.idea/
+/out/
+/server.iml

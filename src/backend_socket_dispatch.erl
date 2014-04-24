@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--export([start/1, stop/0]).
+-export([start_link/0, stop/0]).
 
 -export([init/1,
          handle_call/3,
@@ -11,9 +11,9 @@
          terminate/2,
          code_change/3]).
 
-start(Pars) ->
-    io:format("Starting with ~p~n",[Pars]),
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [Pars], []).
+start_link() ->
+    % io:format("Starting with ~p~n",[Pars]),
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 stop() ->
     io:format("Stopping~n"),

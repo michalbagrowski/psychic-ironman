@@ -45,9 +45,11 @@ terminate(_Reason, _Req, _State) ->
 
 websocket_init(_TransportName, Req, _Opts) ->
     erlang:start_timer(1000, self(), <<"Hello!">>),
+	backend_socket_dispatch:add(self()),
     {ok, Req, undefined_state}.
 
 websocket_handle({text, Msg}, Req, State) ->
+	backend_socket_dispatch:send(Msg),
     {reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
 
 websocket_handle(_Data, Req, State) ->

@@ -15,7 +15,7 @@
 
 init(_Type, Req0, _Opts) ->
 	{Method, Req1} = cowboy_req:method(Req0),
-	error_logger:info_msg("SOCKET HANDLER: ~p~n", [self()]),
+	io:format("SOCKET HANDLER: ~p~n", [self()]),
 
 	case Method of
 		<<"GET">> ->
@@ -29,7 +29,7 @@ init(_Type, Req0, _Opts) ->
 	end.
 
 handle(Req, State) ->
-	error_logger:info_msg("~p~p~n", [Req,State]),
+	io:format("~p~p~n", [Req,State]),
 	{ok, Req2} = cowboy_req:reply(200, [
 		{<<"content-type">>, <<"text/plain">>}
 		], <<"Hello Worlad!">>, Req),
@@ -51,7 +51,7 @@ websocket_handle({text, Msg}, Req, State) ->
     {reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
 
 websocket_handle(_Data, Req, State) ->
-	error_logger:info_msg("websocket_handle: ~p~n", [_Data]),
+	io:format("websocket_handle: ~p~n", [_Data]),
     {ok, Req, State}.
 
 websocket_info({timeout, _Ref, Msg}, Req, State) ->
@@ -59,7 +59,7 @@ websocket_info({timeout, _Ref, Msg}, Req, State) ->
     {reply, {text, Msg}, Req, State};
 
 websocket_info(_Info, Req, State) ->
-	error_logger:info_msg("websocket_info: ~p~n", [_Info]),
+	io:format("websocket_info: ~p~n", [_Info]),
     {ok, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->

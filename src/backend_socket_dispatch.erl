@@ -15,18 +15,18 @@
 
 
 start_link() ->
-    % io:format("Starting with ~p~n",[Pars]),
-	#sockets{open_sockets=orddict:new()},
-
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+
+
 
 stop() ->
     io:format("Stopping~n"),
     gen_server:cast(?MODULE, shutdown).
 
 init(_) ->
-    % io:format("Initializing with ~p~n",[_]),
     process_flag(trap_exit, true),
+	#sockets{open_sockets=orddict:new()},
     {ok, initialized}.
 
 handle_call(Message, From, State) ->

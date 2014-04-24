@@ -16,7 +16,7 @@
 
 start_link() ->
     % io:format("Starting with ~p~n",[Pars]),
-	#sockets{open_sockets=oddict:new()},
+	#sockets{open_sockets=orddict:new()},
 
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 

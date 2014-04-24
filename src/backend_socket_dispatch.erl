@@ -19,8 +19,8 @@ stop() ->
     io:format("Stopping~n"),
     gen_server:cast(?MODULE, shutdown).
 
-init([Pars]) ->
-    io:format("Initializing with ~p~n",[Pars]),
+init(_) ->
+    % io:format("Initializing with ~p~n",[_]),
     process_flag(trap_exit, true),
     {ok, initialized}.
 

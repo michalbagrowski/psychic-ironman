@@ -27,7 +27,7 @@ init([]) ->
     {ok, { {one_for_one, 5, 10}, [
         {backend_socket_dispatch,
             {backend_socket_dispatch, start_link, []},
-            temporary, 5000, worker,
+            permanent, 5000, worker,
             [backend_socket_dispatch]
         }
 

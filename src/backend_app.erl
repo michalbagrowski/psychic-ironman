@@ -10,6 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+	reloader:start(),
 	Dispatch = cowboy_router:compile([
         %% {URIHost, list({URIPath, Handler, Opts})}
         {'_', [{'_', socket_handler, []}]}

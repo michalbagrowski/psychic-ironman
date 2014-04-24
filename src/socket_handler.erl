@@ -66,4 +66,6 @@ websocket_info(Msg, Req, State) ->
 	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
+	backend_socket_dispatch:remove( self()),
+	io:format("websocket_terminate: ~p~n", [self()]),
     ok.

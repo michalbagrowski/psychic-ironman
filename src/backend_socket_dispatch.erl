@@ -11,8 +11,13 @@
          terminate/2,
          code_change/3]).
 
+-record(sockets, {open_sockets}).
+
+
 start_link() ->
     % io:format("Starting with ~p~n",[Pars]),
+	#sockets{open_sockets=oddict:new()},
+
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 stop() ->

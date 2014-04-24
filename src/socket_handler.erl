@@ -49,7 +49,7 @@ websocket_init(_TransportName, Req, _Opts) ->
     {ok, Req, undefined_state}.
 
 websocket_handle({text, Msg}, Req, State) ->
-	backend_socket_dispatch:send(Msg),
+	backend_socket_dispatch:send(Msg, self()),
     {reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
 
 websocket_handle(_Data, Req, State) ->
@@ -60,9 +60,10 @@ websocket_info({timeout, _Ref, Msg}, Req, State) ->
     erlang:start_timer(1000, self(), <<"How' you dsoin'?">>),
     {reply, {text, Msg}, Req, State};
 
-websocket_info(_Info, Req, State) ->
-	io:format("websocket_info: ~p~n", [_Info]),
-    {ok, Req, State}.
+websocket_info(Msg, Req, State) ->
+	io:format("websocket_info: ~p~n", [Msg]),
+    % {ok, Req, State}.
+	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
     ok.

@@ -11,7 +11,7 @@
          terminate/2,
          code_change/3]).
 
--export([add/1]).
+-export([add/1, send/2]).
 
 -record(sockets, {open_sockets}).
 
@@ -36,12 +36,13 @@ handle_call(Message, From, State) ->
     {reply, ok, State}.
 
 handle_cast({add,Pid}, State) ->
-	Open = orddict:store("test", Pid, State#sockets.open_sockets),
+	Open = orddict:store(Pid, Pid, State#sockets.open_sockets),
 	NewState = State#sockets{open_sockets = Open},
 	{noreply, NewState};
 
-handle_cast({send,Msg}, State) ->
-	orddict:map(fun(_, Pid) -> Pid ! Msg end,  State#sockets.open_sockets);
+handle_cast({send,Msg, _SelfPid}, State) ->
+	orddict:map(fun(_, Pid) when Pid =/= _SelfPid  ->  Pid ! Msg; (_, _) -> false end,  State#sockets.open_sockets),
+	{noreply, State};
 
 handle_cast(shutdown, State) ->
     io:format("Generic cast handler: *shutdown* while in '~p'~n",[State]),
@@ -62,9 +63,8 @@ terminate(_Reason, _Server) ->
 code_change(_OldVersion, _Server, _Extra) -> {ok, _Server}.
 
 add(Pid) ->
-	% orddict:store("test", Pid, #sockets.open_sockets).
 	gen_server:cast(?MODULE, {add, Pid}).
 
-send(Msg) ->
-	gen_server:cast(?MODULE, {send, Msg}).
+send(Msg, Pid) ->
+	gen_server:cast(?MODULE, {send, Msg, Pid}).
 

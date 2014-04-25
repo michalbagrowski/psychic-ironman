@@ -17,6 +17,9 @@ init(_Type, Req0, _Opts) ->
 	{Method, Req1} = cowboy_req:method(Req0),
 	io:format("SOCKET HANDLER: ~p~n", [self()]),
 
+
+	Ref = erlang:monitor(process, whereis(backend_socket_dispatch)),
+	io:format("Monitoring backend_socket_dispatch: ~p with ref: ~p~n", [whereis(backend_socket_dispatch), Ref]),
 	case Method of
 		<<"GET">> ->
 			{Path, Req2} = cowboy_req:path(Req1),
@@ -26,10 +29,7 @@ init(_Type, Req0, _Opts) ->
 			end;
 
 		_ -> {upgrade, protocol, cowboy_websocket}
-	end,
-
-	io:format("Monitoring backend_socket_dispatch: ~p~n", [whereis(backend_socket_dispatch)]),
-	erlang:monitor(process, whereis(backend_socket_dispatch)).
+	end.
 
 handle(Req, State) ->
 	io:format("~p~p~n", [Req,State]),
@@ -40,11 +40,6 @@ handle(Req, State) ->
 
 terminate(_Reason, _Req, _State) ->
 	ok.
-
-
-
-% init({tcp, http}, Req, Opts) ->
-    % {upgrade, protocol, cowboy_websocket}.
 
 websocket_init(_TransportName, Req, _Opts) ->
     erlang:start_timer(1000, self(), <<"Hello!">>),
@@ -59,8 +54,6 @@ websocket_handle(_Data, Req, State) ->
 	io:format("websocket_handle: ~p~n", [_Data]),
     {ok, Req, State}.
 
-
-
 websocket_info({timeout, _Ref, Msg}, Req, State) ->
     erlang:start_timer(1000, self(), <<"How' you dsoin'?">>),
     {reply, {text, Msg}, Req, State};
@@ -74,9 +67,6 @@ websocket_info(Msg, Req, State) ->
 	io:format("websocket_info: ~p~n", [Msg]),
     % {ok, Req, State}.
 	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
-
-
-
 
 websocket_terminate(_Reason, _Req, _State) ->
 	backend_socket_dispatch:remove( self()),

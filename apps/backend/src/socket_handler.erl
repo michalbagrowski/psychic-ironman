@@ -26,7 +26,10 @@ init(_Type, Req0, _Opts) ->
 			end;
 
 		_ -> {upgrade, protocol, cowboy_websocket}
-	end.
+	end,
+
+	io:format("Monitoring backend_socket_dispatch: ~p~n", [whereis(backend_socket_dispatch)]),
+	erlang:monitor(process, whereis(backend_socket_dispatch)).
 
 handle(Req, State) ->
 	io:format("~p~p~n", [Req,State]),
@@ -60,10 +63,17 @@ websocket_info({timeout, _Ref, Msg}, Req, State) ->
     erlang:start_timer(1000, self(), <<"How' you dsoin'?">>),
     {reply, {text, Msg}, Req, State};
 
+websocket_info({'DOWN', _, process, _, _}, _Req, _State) ->
+	io:format("Readding pid: ~p~n",[self()]),
+	backend_socket_dispatch:add(self()),
+	{ok, _Req, _State};
+
 websocket_info(Msg, Req, State) ->
 	io:format("websocket_info: ~p~n", [Msg]),
     % {ok, Req, State}.
-	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
+	{nreply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
+
+
 
 websocket_terminate(_Reason, _Req, _State) ->
 	backend_socket_dispatch:remove( self()),

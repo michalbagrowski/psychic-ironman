@@ -59,6 +59,8 @@ websocket_handle(_Data, Req, State) ->
 	io:format("websocket_handle: ~p~n", [_Data]),
     {ok, Req, State}.
 
+
+
 websocket_info({timeout, _Ref, Msg}, Req, State) ->
     erlang:start_timer(1000, self(), <<"How' you dsoin'?">>),
     {reply, {text, Msg}, Req, State};
@@ -71,7 +73,8 @@ websocket_info({'DOWN', _, process, _, _}, _Req, _State) ->
 websocket_info(Msg, Req, State) ->
 	io:format("websocket_info: ~p~n", [Msg]),
     % {ok, Req, State}.
-	{nreply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
+	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
+
 
 
 

@@ -17,9 +17,8 @@ init(_Type, Req0, _Opts) ->
 	{Method, Req1} = cowboy_req:method(Req0),
 	io:format("SOCKET HANDLER: ~p~n", [self()]),
 
+	monitor(),
 
-	Ref = erlang:monitor(process, whereis(backend_socket_dispatch)),
-	io:format("Monitoring backend_socket_dispatch: ~p with ref: ~p~n", [whereis(backend_socket_dispatch), Ref]),
 	case Method of
 		<<"GET">> ->
 			{Path, Req2} = cowboy_req:path(Req1),
@@ -30,6 +29,10 @@ init(_Type, Req0, _Opts) ->
 
 		_ -> {upgrade, protocol, cowboy_websocket}
 	end.
+
+monitor()->
+	Ref = erlang:monitor(process, whereis(backend_socket_dispatch)),
+	io:format("Monitoring backend_socket_dispatch: ~p with ref: ~p~n", [whereis(backend_socket_dispatch), Ref]).
 
 handle(Req, State) ->
 	io:format("~p~p~n", [Req,State]),
@@ -59,6 +62,7 @@ websocket_info({timeout, _Ref, Msg}, Req, State) ->
     {reply, {text, Msg}, Req, State};
 
 websocket_info({'DOWN', _, process, _, _}, _Req, _State) ->
+	monitor(),
 	io:format("Readding pid: ~p~n",[self()]),
 	backend_socket_dispatch:add(self()),
 	{ok, _Req, _State};

@@ -73,3 +73,5 @@ add(Pid) ->
 send(Msg, Pid) ->
 	gen_server:cast(?MODULE, {send, Msg, Pid}).
 
+whereis() ->
+    whereis(?MODULE).

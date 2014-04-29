@@ -5,6 +5,7 @@
 
 
 start() ->
+    reloader:start(),
 	start_with_deps(backend),
 	ok.
 

@@ -11,7 +11,7 @@
          terminate/2,
          code_change/3]).
 
--export([add/1, send/2, remove/1]).
+-export([add/1, send/2, remove/1, whereis/0]).
 
 -record(sockets, {open_sockets}).
 

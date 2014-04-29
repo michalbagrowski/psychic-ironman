@@ -15,7 +15,7 @@
 
 init(_Type, Req0, _Opts) ->
 	{Method, Req1} = cowboy_req:method(Req0),
-	io:format("SOCKET HANDLER: ~p~n", [self()]),
+	io:format("init socket handler: ~p~n", [self()]),
 
 	case Method of
 		<<"GET">> ->
@@ -29,7 +29,7 @@ init(_Type, Req0, _Opts) ->
 	end.
 
 monitor()->
-	Ref = erlang:monitor(process, backend_socket_dispatch:whereis(backend_socket_dispatch)),
+	Ref = erlang:monitor(process, backend_socket_dispatch:whereis()),
 	io:format("Monitoring backend_socket_dispatch: ~p with ref: ~p~n", [whereis(backend_socket_dispatch), Ref]).
 
 handle(Req, State) ->
@@ -43,7 +43,7 @@ terminate(_Reason, _Req, _State) ->
 	ok.
 
 websocket_init(_TransportName, Req, _Opts) ->
-    % erlang:start_timer(1000, self(), <<"Hello!">>),
+	io:format("get new websocket connection ~n"),
     monitor(),
 	backend_socket_dispatch:add(self()),
     {ok, Req, undefined_state}.
@@ -52,13 +52,16 @@ websocket_handle({text, Msg}, Req, State) ->
 	backend_socket_dispatch:send(Msg, self()),
     {reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
 
+websocket_handle({binary, Msg}, Req, State) ->
+    io:format("Received binnary Msg. Forwarding to all clients"),
+	backend_socket_dispatch:send(Msg, self()),
+    % {reply, {binnary, << "That's what she said! ", Msg/binary >>}, Req, State};
+    {ok, Req, State};
+
+
 websocket_handle(_Data, Req, State) ->
 	io:format("websocket_handle: ~p~n", [_Data]),
     {ok, Req, State}.
-
-websocket_info({timeout, _Ref, Msg}, Req, State) ->
-    erlang:start_timer(1000, self(), <<"How' you dsoin'?">>),
-    {reply, {text, Msg}, Req, State};
 
 websocket_info({'DOWN', _, process, _, _}, _Req, _State) ->
 	monitor(),
@@ -67,7 +70,7 @@ websocket_info({'DOWN', _, process, _, _}, _Req, _State) ->
 	{ok, _Req, _State};
 
 websocket_info(Msg, Req, State) ->
-	io:format("websocket_info: ~p~n", [Msg]),
+	io:format("UNKNOWN MESSAGE: ~p~p~p~n", [Msg]),
     % {ok, Req, State}.
 	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
 

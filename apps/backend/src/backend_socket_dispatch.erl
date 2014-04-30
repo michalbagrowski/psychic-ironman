@@ -15,9 +15,7 @@
         add/2,
         send/3,
         remove/2,
-        whereis/0,
-        start_session/2
-
+        whereis/0
 ]).
 
 -record(state, {open_sockets, open_sessions}).
@@ -33,9 +31,6 @@ send(SessionId, Msg, Pid) ->
 
 whereis() ->
     whereis(?MODULE).
-
-start_session(Name, Pid) ->
-    gen_server:cast(?MODULE, {start_session, Name, Pid}).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).

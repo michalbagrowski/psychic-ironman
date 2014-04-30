@@ -73,8 +73,7 @@ handle_cast({add, SessionId, Pid}, State) ->
 handle_cast({remove, SessionId, Pid}, State) ->
     {ok, Sessions} = orddict:find(SessionId, State#state.open_sessions),
 
-    RemoveFun = fun(SessionPid, Acc) when SessionPid =/= Pid -> [SessionPid|Acc]; (_, Acc) -> Acc  end,
-    NewPids = lists:foldr(RemoveFun, [], Sessions),
+    NewPids = lists:delete(Pid, Sessions),
     NewState = State#state{open_sockets = State#state.open_sockets, open_sessions = orddict:store(SessionId, NewPids, State#state.open_sessions)},
 
 	  {noreply, NewState};

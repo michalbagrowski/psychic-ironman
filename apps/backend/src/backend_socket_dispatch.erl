@@ -71,7 +71,11 @@ handle_cast({add, SessionId, Pid}, State) ->
 	  {noreply, NewState};
 
 handle_cast({remove, SessionId, Pid}, State) ->
-    {ok, Sessions} = orddict:find(SessionId, State#state.open_sessions),
+
+    Sessions = case orddict:find(SessionId, State#state.open_sessions) of
+                   {ok, List} -> List;
+                   error -> []
+               end,
 
     NewPids = lists:delete(Pid, Sessions),
     NewState = State#state{open_sockets = State#state.open_sockets, open_sessions = orddict:store(SessionId, NewPids, State#state.open_sessions)},

@@ -49,12 +49,13 @@ websocket_init(_TransportName, Req, _Opts) ->
     {ok, Req, undefined_state}.
 
 websocket_handle({text, Msg}, Req, State) ->
-	backend_socket_dispatch:send(Msg, self()),
-    {reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
+	backend_socket_dispatch:send({text, Msg}, self()),
+    % {reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
+    {ok, Req, State};
 
 websocket_handle({binary, Msg}, Req, State) ->
     io:format("Received binnary Msg. Forwarding to all clients"),
-	backend_socket_dispatch:send(Msg, self()),
+	  backend_socket_dispatch:send({binary, Msg}, self()),
     % {reply, {binnary, << "That's what she said! ", Msg/binary >>}, Req, State};
     {ok, Req, State};
 
@@ -69,10 +70,18 @@ websocket_info({'DOWN', _, process, _, _}, _Req, _State) ->
 	backend_socket_dispatch:add(self()),
 	{ok, _Req, _State};
 
+websocket_info({text, Msg}, Req, State) ->
+  io:format("text message: ~p~n", [Msg]),
+  {reply, {text, << Msg/binary >>}, Req, State};
+
+websocket_info({binary, Msg}, Req, State) ->
+  io:format("binary message: ~p~~n", [Msg]),
+  {reply, {binary, Msg}, Req, State};
+
 websocket_info(Msg, Req, State) ->
-	io:format("UNKNOWN MESSAGE: ~p~p~p~n", [Msg]),
-    % {ok, Req, State}.
-	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
+	io:format("UNKNOWN MESSAGE: ~p~n", [Msg]),
+  {ok, Req, State}.
+%% 	{reply, {text, <<"resend: " ,Msg/binary >>}, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
 	backend_socket_dispatch:remove( self()),

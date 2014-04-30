@@ -47,7 +47,8 @@ terminate(_Reason, _Req, _State) ->
 websocket_init(_TransportName, Req, _Opts) ->
 	  io:format("get new websocket connection ~n"),
     monitor(),
-    {ok, Req, undefined_state}.
+    State = #state{session_id = empty},
+    {ok, Req, State}.
 
 websocket_handle({text, Msg}, Req, _State) ->
 

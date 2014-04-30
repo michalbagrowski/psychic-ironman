@@ -13,6 +13,8 @@
 -export([websocket_info/3]).
 -export([websocket_terminate/3]).
 
+-record(state, {session_id}).
+
 init(_Type, Req0, _Opts) ->
 	{Method, Req1} = cowboy_req:method(Req0),
 	io:format("init socket handler: ~p~n", [self()]),
@@ -45,15 +47,19 @@ terminate(_Reason, _Req, _State) ->
 websocket_init(_TransportName, Req, _Opts) ->
 	  io:format("get new websocket connection ~n"),
     monitor(),
-	  backend_socket_dispatch:add(self()),
     {ok, Req, undefined_state}.
 
 websocket_handle({text, Msg}, Req, State) ->
-    backend_socket_dispatch:send({text, Msg}, self()),
-    {ok, Req, State};
+
+    SessionId = Msg,
+    backend_socket_dispatch:add(SessionId, self()),
+
+    NewState = #state{session_id = SessionId},
+    backend_socket_dispatch:send(NewState#state.session_id, {text, Msg}, self()),
+    {ok, Req, NewState};
 
 websocket_handle({binary, Msg}, Req, State) ->
-	  backend_socket_dispatch:send({binary, Msg}, self()),
+	  backend_socket_dispatch:send(State#state.session_id, {binary, Msg}, self()),
     {ok, Req, State};
 
 
@@ -61,11 +67,11 @@ websocket_handle(_Data, Req, State) ->
     io:format("websocket_handle: ~p~n", [_Data]),
     {ok, Req, State}.
 
-websocket_info({'DOWN', _, process, _, _}, _Req, _State) ->
+websocket_info({'DOWN', _, process, _, _}, _Req, State) ->
     monitor(),
 	  io:format("Readding pid: ~p~n",[self()]),
-	  backend_socket_dispatch:add(self()),
-	  {ok, _Req, _State};
+	  backend_socket_dispatch:add(State#state.session_id, self()),
+	  {ok, _Req, State};
 
 websocket_info({text, Msg}, Req, State) ->
     io:format("text message: ~p~n", [Msg]),

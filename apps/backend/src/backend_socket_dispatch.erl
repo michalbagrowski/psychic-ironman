@@ -14,22 +14,22 @@
 -export([
         add/2,
         send/3,
-        remove/1,
+        remove/2,
         whereis/0,
         start_session/2
 
 ]).
 
--record(sockets, {open_sockets}).
+%% -record(sockets, {open_sockets}).
 
--record(session, {name, sockets}).
+%% -record(session, {name, sockets}).
 
--record(sessions, {open_sessions}).
+%% -record(sessions, {open_sessions}).
 
 -record(state, {open_sockets, open_sessions}).
 
-remove(Pid) ->
-    gen_server:cast(?MODULE, {remove, Pid}).
+remove(SessionId, Pid) ->
+    gen_server:cast(?MODULE, {remove, SessionId, Pid}).
 
 add(SessionId, Pid) ->
     gen_server:cast(?MODULE, {add, SessionId, Pid}).
@@ -53,23 +53,45 @@ stop() ->
 init(_) ->
     process_flag(trap_exit, true),
 	  State = #state{open_sessions = orddict:new(), open_sockets = orddict:new()},
-
     {ok, State}.
 
 handle_call(Message, From, State) ->
     io:format("Generic call handler: '~p' from '~p' while in '~p'~n",[Message, From, State]),
     {reply, ok, State}.
 
-handle_cast({add, _SessionId, Pid}, State) ->
-	  NewState = State#sockets{open_sockets = orddict:store(Pid, Pid, State#sockets.open_sockets)},
+handle_cast({add, SessionId, Pid}, State) ->
+
+    PidList = case  orddict:find(SessionId, State#state.open_sessions) of
+                  {ok, List} -> case lists:member(Pid, List) of
+                                    true -> List;
+                                    false -> [Pid | List]
+                                end;
+                  error -> [Pid]
+              end,
+
+	  NewState = State#state{
+        open_sockets = orddict:store(Pid, Pid, State#state.open_sockets),
+        open_sessions = orddict:store(SessionId, PidList, State#state.open_sessions)
+    },
+
 	  {noreply, NewState};
 
-handle_cast({remove, Pid}, State) ->
- 	  NewState = State#sockets{open_sockets = orddict:erase(Pid, State#sockets.open_sockets)},
+handle_cast({remove, SessionId, Pid}, State) ->
+    {ok, Sessions} = orddict:find(SessionId, State#state.open_sessions),
+
+    RemoveFun = fun(SessionPid, Acc) when SessionPid =/= Pid -> [SessionPid|Acc]; (_, Acc) -> Acc  end,
+
+    NewPids = lists:foldr(RemoveFun, [], Sessions),
+
+
+
+    NewState = State#state{open_sockets = State#state.open_sockets, open_sessions = orddict:store(SessionId, NewPids, State#state.open_sessions)},
+
 	  {noreply, NewState};
 
-handle_cast({send, _SessionId, Msg, SelfPid}, State) ->
-	  orddict:map(fun(_, Pid) when Pid =/= SelfPid  ->  Pid ! Msg; (_, _) -> false end,  State#sockets.open_sockets),
+handle_cast({send, SessionId, Msg, SelfPid}, State) ->
+    {ok, PidList} = orddict:find(SessionId, State#state.open_sessions),
+    lists:foreach(fun(Pid) when Pid =/= SelfPid -> Pid ! Msg; (_) -> false end , PidList),
 	  {noreply, State};
 
 handle_cast(shutdown, State) ->

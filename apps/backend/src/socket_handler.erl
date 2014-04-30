@@ -49,7 +49,7 @@ websocket_init(_TransportName, Req, _Opts) ->
     monitor(),
     {ok, Req, undefined_state}.
 
-websocket_handle({text, Msg}, Req, State) ->
+websocket_handle({text, Msg}, Req, _State) ->
 
     SessionId = Msg,
     backend_socket_dispatch:add(SessionId, self()),
@@ -85,7 +85,7 @@ websocket_info(Msg, Req, State) ->
 	  io:format("UNKNOWN MESSAGE: ~p~n", [Msg]),
     {ok, Req, State}.
 
-websocket_terminate(_Reason, _Req, _State) ->
-	  backend_socket_dispatch:remove( self()),
+websocket_terminate(_Reason, _Req, State) ->
+	  backend_socket_dispatch:remove(State#state.session_id, self()),
 	  io:format("websocket_terminate: ~p~n", [self()]),
     ok.

@@ -32,7 +32,7 @@ init(_Type, Req0, _Opts) ->
 
 monitor()->
 	Ref = erlang:monitor(process, backend_socket_dispatch:whereis()),
-	io:format("Monitoring backend_socket_dispatch: ~p with ref: ~p~n", [whereis(backend_socket_dispatch), Ref]).
+	io:format("Monitoring backend_socket_dispatch: ~p with ref: ~p~n", [backend_socket_dispatch:whereis(backend_socket_dispatch), Ref]).
 
 handle(Req, State) ->
 	  io:format("~p~p~n", [Req, State]),

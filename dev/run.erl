@@ -6,8 +6,10 @@
 
 start() ->
     reloader:start(),
-	start_with_deps(backend),
-	ok.
+    start_with_deps(backend),
+    receive
+        stop -> stop
+    end.
 
 start_with_deps(App) ->
   case application:start(App) of
